@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/* Official HyperTeam Brand Typography (bundled locally from About HyperTeam/Media) */
+@font-face {
+  font-family: 'Cairo';
+  src: url('./assets/fonts/Cairo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cairo';
+  src: url('./assets/fonts/Cairo-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cairo';
+  src: url('./assets/fonts/Cairo-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cairo';
+  src: url('./assets/fonts/Cairo-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('./assets/fonts/Montserrat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('./assets/fonts/Montserrat-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Official HyperTeam Design Tokens (Light Mode Only) */
+:root {
+  --ht-cream: #f7e8d2;
+  --ht-canvas: #fbf6ee;
+  --ht-surface: #ffffff;
+  --ht-yellow: #e2a425;
+  --ht-orange: #d27728;
+  --ht-charcoal: #2b3439;
+  --ht-charcoal-soft: #364147;
+  --ht-border: rgba(43, 52, 57, 0.1);
+  --ht-border-strong: rgba(43, 52, 57, 0.18);
+  --ht-shadow-sm: 0 1px 3px rgba(43, 52, 57, 0.05);
+  --ht-shadow-md: 0 6px 20px rgba(43, 52, 57, 0.08);
+  --ht-shadow-modal: 0 24px 54px rgba(15, 21, 25, 0.32);
+  --ht-wave-gold: #e2a425;
+  --ht-wave-orange: #d27728;
+  --ht-wave-sand: #b39a6c;
+  --ht-wave-muted: #8a8172;
+}
+
+@theme {
+  --color-hyper-slate: #2b3439;
+  --color-hyper-slate-light: #364147;
+  --color-hyper-gold: #e2a425;
+  --color-hyper-orange: #d27728;
+  --color-hyper-cream: #f7e8d2;
+  --color-hyper-bg: #fbf6ee;
+  --font-heading: 'Cairo', 'Montserrat', sans-serif;
+  --font-body: 'Noto Sans Arabic', 'Cairo', 'Montserrat', sans-serif;
+  --font-en: 'Montserrat', 'Cairo', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background-color: var(--ht-canvas);
+    color: var(--ht-charcoal);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-en {
+    font-family: var(--font-en);
+  }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-enter {
+  animation: modalEnter 160ms ease-out forwards;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(43, 52, 57, 0.22);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(43, 52, 57, 0.4);
+}
