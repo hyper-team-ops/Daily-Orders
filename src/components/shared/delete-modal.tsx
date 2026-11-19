@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface DeleteModalProps {
@@ -17,9 +18,9 @@ export function DeleteModal({
 }: DeleteModalProps) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
       role="alertdialog"
       aria-modal="true"
     >
@@ -39,7 +40,7 @@ export function DeleteModal({
             className="p-1 rounded-lg hover:bg-[#8A222E]/10 text-[#8A222E] cursor-pointer"
             aria-label="إغلاق"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -66,6 +67,7 @@ export function DeleteModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
