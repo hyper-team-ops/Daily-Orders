@@ -23,6 +23,7 @@ import { SyncModal } from '@/components/sync/sync-modal';
 import { COACHES } from '@/config/coaches';
 import { useDeleteModal } from '@/hooks/use-delete-modal';
 import { formatArabicDate, getTodayDateKey } from '@/lib/date';
+import { SERVICE_OPTIONS, SERVICE_STYLE } from '@/lib/service-styles';
 import { computeDayStats, storageService } from '@/services/storage.service';
 import type { DayRecord, Order, ServiceType } from '@/types/order';
 
@@ -246,8 +247,9 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
         />
       </section>
 
-      {/* Orders Tabs Switcher: الطلبات المفتوحة vs الطلبات المُسلّمة */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* All Filters Row: Open/Delivered tabs + Service type filters side-by-side */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Open / Delivered Tabs */}
         <div
           role="tablist"
           aria-label="تصنيف الطلبات"
@@ -309,14 +311,48 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
             </span>
           </button>
         </div>
+
+        {/* Service Type Filters */}
+        <div className="inline-flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-[#2B3439]/10 shadow-[var(--ht-shadow-sm)]">
+          <button
+            type="button"
+            onClick={() => setSelectedService('ALL')}
+            className={`px-3.5 py-2.5 rounded-xl text-xs font-heading font-bold border transition cursor-pointer ${
+              selectedService === 'ALL'
+                ? 'bg-[#2B3439] text-[#E2A425] border-[#2B3439] shadow-xs'
+                : 'bg-[#FBF6EE] text-[#2B3439]/75 border-[#2B3439]/12 hover:bg-[#F7E8D2]/70 hover:text-[#2B3439]'
+            }`}
+          >
+            الكل
+          </button>
+
+          {SERVICE_OPTIONS.map((service) => {
+            const style = SERVICE_STYLE[service];
+            const Icon = style.icon;
+            const isActive = selectedService === service;
+            return (
+              <button
+                key={service}
+                type="button"
+                onClick={() => setSelectedService(service)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-heading font-bold border transition cursor-pointer ${
+                  isActive
+                    ? `${style.activeBg} shadow-xs`
+                    : `${style.bg} ${style.text} ${style.border} hover:brightness-95`
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{service}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Unified Search & Service Filters */}
+      {/* Full-width Search Bar Under the Filters */}
       <SearchFilterBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedService={selectedService}
-        onServiceChange={setSelectedService}
         searchInputRef={searchInputRef}
       />
 
