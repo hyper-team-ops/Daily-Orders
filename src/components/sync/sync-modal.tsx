@@ -42,7 +42,7 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
     setShowSettings(!latest.webhookUrl);
   }, [open]);
 
-  const [loadingAction, setLoadingAction] = useState<'sheet' | 'export' | null>(
+  const [loadingAction, setLoadingAction] = useState<'sheet' | 'drive' | null>(
     null,
   );
   const [feedback, setFeedback] = useState<{
@@ -68,25 +68,47 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
     setShowSettings(false);
   };
 
-  const handleSync = async (triggerExport: boolean) => {
+  const handleSyncSheet = async () => {
     storageService.saveSyncConfig({
       webhookUrl,
       secretToken,
       autoTriggerExport,
     });
     setFeedback(null);
-    setLoadingAction(triggerExport ? 'export' : 'sheet');
+    setLoadingAction('sheet');
     try {
-      const res = await syncService.syncDayToGoogleSheet(
-        day.date,
-        triggerExport,
-      );
+      const res = await syncService.syncDayToGoogleSheet(day.date, false);
       onSynced(storageService.getDay(day.date));
       setFeedback({ type: 'success', message: res.message });
     } catch (err) {
       setFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'فشلت عملية المزامنة',
+      });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleExportDriveOnly = async () => {
+    storageService.saveSyncConfig({
+      webhookUrl,
+      secretToken,
+      autoTriggerExport,
+    });
+    setFeedback(null);
+    setLoadingAction('drive');
+    try {
+      const res = await syncService.exportDayToDriveOnly(day.date);
+      onSynced(storageService.getDay(day.date));
+      setFeedback({ type: 'success', message: res.message });
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message:
+          err instanceof Error
+            ? err.message
+            : 'فشلت عملية التصدير إلى Google Drive',
       });
     } finally {
       setLoadingAction(null);
@@ -244,7 +266,7 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
         <button
           type="button"
           disabled={loadingAction !== null || !isConfigured}
-          onClick={() => handleSync(false)}
+          onClick={handleSyncSheet}
           className="w-full p-4 rounded-2xl border-2 border-[#E2A425] bg-[#F7E8D2]/70 hover:bg-[#F7E8D2] transition text-right flex items-center justify-between gap-3 disabled:opacity-50 cursor-pointer"
         >
           <div className="flex items-center gap-3">
@@ -260,22 +282,22 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
                 تفريغ في الشيت الأساسية الآن (Google Sheet)
               </p>
               <p className="text-xs text-[#2B3439]/75">
-                يكتب اسم الكوتش (H1) وجميع الطلبات في النطاق I3:O32
+                يكتب اسم الكوتش وجميع الطلبات في النطاق I3:O32
               </p>
             </div>
           </div>
         </button>
 
-        {/* Action 2: Flush + Export to Drive */}
+        {/* Action 2: Export to Google Drive Only (without touching the sheet) */}
         <button
           type="button"
           disabled={loadingAction !== null || !isConfigured}
-          onClick={() => handleSync(true)}
-          className="w-full p-4 rounded-2xl border-2 border-[#2B3439]/15 hover:border-[#E2A425] bg-white hover:bg-[#FBF6EE] transition text-right flex items-center justify-between gap-3 disabled:opacity-50 cursor-pointer"
+          onClick={handleExportDriveOnly}
+          className="w-full p-4 rounded-2xl border-2 border-[#2B3439]/15 hover:border-[#D27728] bg-white hover:bg-[#FDF9F3] transition text-right flex items-center justify-between gap-3 disabled:opacity-50 cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#F7E8D2] text-[#D27728] flex items-center justify-center shrink-0">
-              {loadingAction === 'export' ? (
+              {loadingAction === 'drive' ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <FolderUp className="w-5 h-5" />
@@ -283,10 +305,10 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
             </div>
             <div>
               <p className="font-heading text-sm font-bold text-[#2B3439]">
-                تفريغ في الشيت + تصدير فوري إلى Drive
+                تصدير إلى Google Drive فقط (ملف Excel)
               </p>
               <p className="text-xs text-[#2B3439]/65">
-                يكتب الطلبات ثم يرفع {day.date}.xlsx إلى Statistics في Drive
+                يرفع {day.date}.xlsx مباشرة إلى مجلد Statistics في Drive بدون المساس بالشيت الأساسية
               </p>
             </div>
           </div>

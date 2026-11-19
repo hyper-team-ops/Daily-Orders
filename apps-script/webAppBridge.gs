@@ -32,7 +32,6 @@ function doGet() {
 
 /**
  * يستقبل الطلبات مباشرة من المتصفح (بصيغة text/plain JSON لتفادي CORS preflight)
- * ويفرّغها في الشيت الأساسية بالترتيب الصحيح (I..O) مع الحفاظ على الـ Checkboxes.
  */
 function doPost(e) {
   try {
@@ -46,6 +45,19 @@ function doPost(e) {
       return jsonResponse_({ ok: false, error: "Unauthorized: Invalid secret token" });
     }
 
+    // الخيار 1: تصدير إلى Google Drive فقط (بدون أي تعديل على الشيت الأساسية)
+    if (payload.action === "exportDriveOnly" || payload.exportOnly === true) {
+      const exportResult = exportToDriveOnly_(payload);
+      return jsonResponse_({
+        ok: true,
+        exported: true,
+        fileId: exportResult.fileId,
+        fileName: exportResult.fileName,
+        folderPath: exportResult.folderPath,
+      });
+    }
+
+    // الخيار 2: تفريغ في الشيت الأساسية (Google Sheet)
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheets()[0];
 
@@ -82,7 +94,7 @@ function doPost(e) {
 
     SpreadsheetApp.flush();
 
-    // 4. تصدير الشيت إلى Drive إذا طُلب ذلك
+    // 4. تصدير الشيت إلى Drive إذا طُلب ذلك مع المزامنة
     var exported = false;
     if (payload.triggerExport === true) {
       exportSheetWithDate_(ss, payload.date);
@@ -100,6 +112,59 @@ function doPost(e) {
       error: err && err.message ? err.message : String(err),
     });
   }
+}
+
+/**
+ * تصدير ملف Excel إلى Drive في مجلد Statistics/Year/Month دون تعديل الشيت الأساسية
+ */
+function exportToDriveOnly_(payload) {
+  const ROOT_FOLDER_NAME = "Statistics";
+  const timeZone = Session.getScriptTimeZone();
+  const targetDate = payload.date
+    ? new Date(payload.date + "T12:00:00")
+    : new Date();
+
+  const yearString = Utilities.formatDate(targetDate, timeZone, "yyyy");
+  const monthString = Utilities.formatDate(targetDate, timeZone, "MMMM");
+  const dateStamp = payload.date || Utilities.formatDate(targetDate, timeZone, "yyyy-MM-dd");
+  const fileName = payload.fileName || (dateStamp + ".xlsx");
+
+  const rootFolder = bridgeGetOrCreateFolder_(DriveApp.getRootFolder(), ROOT_FOLDER_NAME);
+  const yearFolder = bridgeGetOrCreateFolder_(rootFolder, yearString);
+  const monthFolder = bridgeGetOrCreateFolder_(yearFolder, monthString);
+
+  var createdFile;
+  if (payload.fileBase64) {
+    // ملف Excel تم إنشاؤه بالمتصفح وتحويله إلى Base64
+    const bytes = Utilities.base64Decode(payload.fileBase64);
+    const blob = Utilities.newBlob(
+      bytes,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      fileName
+    );
+    createdFile = monthFolder.createFile(blob);
+  } else {
+    // كحل احتياطي: تصدير نسخة من الشيت دون تفريغها
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetId = ss.getId();
+    const exportUrl = "https://docs.google.com/spreadsheets/d/" + sheetId + "/export?format=xlsx";
+    const response = UrlFetchApp.fetch(exportUrl, {
+      method: "get",
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    });
+    if (response.getResponseCode() !== 200) {
+      throw new Error("Failed to export spreadsheet. HTTP Status: " + response.getResponseCode());
+    }
+    const blob = response.getBlob().setName(fileName);
+    createdFile = monthFolder.createFile(blob);
+  }
+
+  return {
+    fileId: createdFile.getId(),
+    fileName: fileName,
+    folderPath: ROOT_FOLDER_NAME + "/" + yearString + "/" + monthString,
+  };
 }
 
 function exportSheetWithDate_(ss, customDateStr) {
@@ -133,10 +198,6 @@ function exportSheetWithDate_(ss, customDateStr) {
   const fileName = dateStamp + ".xlsx";
   const blob = response.getBlob().setName(fileName);
   monthFolder.createFile(blob);
-
-  const sheet = ss.getSheets()[0];
-  sheet.getRange(TEXT_DATA_RANGE).clearContent();
-  sheet.getRange(CHECKBOX_RANGE).uncheck();
   SpreadsheetApp.flush();
 }
 

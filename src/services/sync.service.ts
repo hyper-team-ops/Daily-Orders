@@ -81,9 +81,9 @@ export const syncService = {
   },
 
   /**
-   * Generates and downloads a local RTL Excel (.xlsx) file directly in the browser (lazy-loaded).
+   * Builds an RTL Excel (.xlsx) workbook object for the given day.
    */
-  async downloadDayExcel(day: DayRecord): Promise<void> {
+  async buildDayWorkbook(day: DayRecord) {
     const XLSX = await import('xlsx');
     const rows: (string | number)[][] = [
       [`اسم الكوتش : ${day.coachName || 'غير محدد'}`],
@@ -130,6 +130,98 @@ export const syncService = {
     const workbook = XLSX.utils.book_new();
     workbook.Workbook = { Views: [{ RTL: true }] };
     XLSX.utils.book_append_sheet(workbook, worksheet, `طلبات ${day.date}`);
+    return { XLSX, workbook };
+  },
+
+  /**
+   * Generates and downloads a local RTL Excel (.xlsx) file directly in the browser (lazy-loaded).
+   */
+  async downloadDayExcel(day: DayRecord): Promise<void> {
+    const { XLSX, workbook } = await this.buildDayWorkbook(day);
     XLSX.writeFile(workbook, `HyperTeam-${day.date}.xlsx`);
+  },
+
+  /**
+   * Generates base64 string of the day's Excel file.
+   */
+  async generateDayExcelBase64(day: DayRecord): Promise<string> {
+    const { XLSX, workbook } = await this.buildDayWorkbook(day);
+    return XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
+  },
+
+  /**
+   * Exports the day's Excel file directly to Google Drive (Statistics folder)
+   * WITHOUT touching or modifying the main Google Sheet.
+   */
+  async exportDayToDriveOnly(dateKey: string): Promise<SyncResult> {
+    const config = storageService.getSyncConfig();
+    if (!config.webhookUrl) {
+      throw new Error(
+        'رابط Apps Script غير مضبوط بعد. أضفه في إعدادات المزامنة أو داخل ملف .env',
+      );
+    }
+
+    const day = storageService.getDay(dateKey);
+    const fileBase64 = await this.generateDayExcelBase64(day);
+
+    const payload = {
+      secret: config.secretToken,
+      date: day.date,
+      action: 'exportDriveOnly',
+      exportOnly: true,
+      fileName: `${day.date}.xlsx`,
+      fileBase64,
+      coachName: day.coachName ?? '',
+      orders: day.orders.map((order) => ({
+        orderNumber: order.orderNumber,
+        studentName: order.studentName,
+        requestDetails: order.requestDetails,
+        serviceType: order.serviceTypes.join(', '),
+        deviceName: order.deviceName ?? '',
+        notes: order.notes ?? '',
+        isCompleted: order.isCompleted,
+        isDelivered: order.isDelivered,
+      })),
+    };
+
+    const response = await fetch(config.webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    });
+
+    const rawText = await response.text();
+    let parsed: Record<string, unknown> = {};
+    try {
+      parsed = JSON.parse(rawText) as Record<string, unknown>;
+    } catch {
+      if (!response.ok) {
+        throw new Error(
+          `فشل الاتصال بـ Google Apps Script (HTTP ${response.status})`,
+        );
+      }
+    }
+
+    if (!response.ok || parsed.ok === false) {
+      const msg =
+        typeof parsed.error === 'string'
+          ? parsed.error
+          : `فشل التصدير إلى Drive (HTTP ${response.status})`;
+      throw new Error(msg);
+    }
+
+    const updated = storageService.markSynced(day.date, true);
+
+    return {
+      success: true,
+      date: updated.date,
+      ordersCount: updated.orders.length,
+      exportedToDrive: true,
+      syncedAt: updated.syncedAt ?? new Date().toISOString(),
+      message: `تم تصدير ملف ${day.date}.xlsx إلى Google Drive بنجاح (بدون المساس بالشيت)`,
+    };
   },
 };
