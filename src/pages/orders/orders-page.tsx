@@ -211,15 +211,6 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
               <CloudUpload className="w-4 h-4 text-[#D27728]" />
               <span className="hidden sm:inline">مزامنة وتصدير</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 h-10 rounded-xl bg-[#E2A425] hover:bg-[#D27728] text-[#2B3439] hover:text-white text-xs sm:text-sm font-heading font-bold shadow-xs transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>طلب جديد</span>
-            </button>
           </>
         }
       />
@@ -329,22 +320,45 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
         </div>
 
         {activeTab === 'open' ? (
-          openOrders.length === 0 ? (
-            <EmptyState
-              title={
-                stats.totalOrders === 0
-                  ? 'لا توجد طلبات مسجلة في هذا اليوم بعد'
-                  : 'لا توجد طلبات مفتوحة حالياً'
-              }
-              description={
-                stats.totalOrders === 0
-                  ? 'اضغط على زر "طلب جديد" في الأعلى لإضافة أول طلب طالب.'
-                  : 'تم تسليم جميع الطلبات المطابقة، يمكنك استعراضها من زر "الطلبات المُسلّمة".'
-              }
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {openOrders.map((order) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {/* بطاقة إضافة طلب جديد — ثابتة دائماً على اليمين في أول خانة */}
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="group relative min-h-[190px] rounded-2xl border-2 border-dashed border-[#E2A425] hover:border-[#D27728] bg-white hover:bg-[#FDF9F3] transition-all duration-200 overflow-hidden shadow-[var(--ht-shadow-sm)] hover:shadow-[var(--ht-shadow-md)] flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none"
+              aria-label="إضافة طلب جديد"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#E2A425]/15 group-hover:bg-[#E2A425] text-[#D27728] group-hover:text-[#2B3439] flex items-center justify-center transition-all duration-200 shadow-2xs group-hover:scale-105">
+                <Plus className="w-7 h-7 stroke-[2.5]" />
+              </div>
+              <div className="mt-3.5">
+                <h3 className="font-heading text-base sm:text-lg font-extrabold text-[#2B3439] group-hover:text-[#D27728] transition-colors">
+                  طلب جديد
+                </h3>
+                <p className="text-xs text-[#2B3439]/65 mt-1">
+                  انقر لإضافة طلب طالب جديد
+                </p>
+              </div>
+            </button>
+
+            {openOrders.length === 0 ? (
+              <div className="col-span-1 md:col-span-1 xl:col-span-2 min-h-[190px] rounded-2xl border border-dashed border-[#2B3439]/15 bg-white/60 p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-xl bg-[#F7E8D2]/80 text-[#2B3439]/55 flex items-center justify-center mb-2">
+                  <FolderOpen className="w-5 h-5 text-[#D27728]" />
+                </div>
+                <p className="font-heading text-sm font-bold text-[#2B3439]/80">
+                  {stats.totalOrders === 0
+                    ? 'لا توجد طلبات مسجلة في هذا اليوم بعد'
+                    : 'لا توجد طلبات مفتوحة حالياً'}
+                </p>
+                <p className="text-xs text-[#2B3439]/55 mt-1 max-w-sm">
+                  {stats.totalOrders === 0
+                    ? 'اضغط على بطاقة "طلب جديد" على اليمين لتسجيل أول طلب طالب.'
+                    : 'تم تسليم جميع الطلبات المطابقة، يمكنك استعراضها من تبويب "الطلبات المُسلّمة".'}
+                </p>
+              </div>
+            ) : (
+              openOrders.map((order) => (
                 <OrderCard
                   key={order.id}
                   order={order}
@@ -352,9 +366,9 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
                   onToggleDelivered={(o) => handleQuickToggle(o, 'isDelivered')}
                   onOpenDetails={(o) => setActiveDetailsOrderId(o.id)}
                 />
-              ))}
-            </div>
-          )
+              ))
+            )}
+          </div>
         ) : deliveredOrders.length === 0 ? (
           <EmptyState
             title="لا توجد طلبات مُسلّمة في هذا اليوم بعد"
@@ -382,7 +396,10 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
         dateKey={day.date}
         entity={null}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={(updatedDay) => setDay(updatedDay)}
+        onSuccess={(updatedDay) => {
+          setDay(updatedDay);
+          setActiveTab('open');
+        }}
       />
 
       <OrderDetailsModal

@@ -36,12 +36,9 @@ jobs:
         run: pnpm install
 
       - name: Build application
-        run: pnpm build
-
-      - name: Build application
         env:
-         VITE_GAS_WEBHOOK_URL: ${{ secrets.VITE_GAS_WEBHOOK_URL }}
-         VITE_GAS_SECRET_TOKEN: ${{ secrets.VITE_GAS_SECRET_TOKEN }}
+          VITE_GAS_WEBHOOK_URL: ${{ secrets.VITE_GAS_WEBHOOK_URL }}
+          VITE_GAS_SECRET_TOKEN: ${{ secrets.VITE_GAS_SECRET_TOKEN }}
         run: pnpm build
 
       - name: Setup Pages
@@ -51,8 +48,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
-
-
 
   deploy:
     environment:

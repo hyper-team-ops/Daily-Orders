@@ -159,7 +159,10 @@ export function LeftNavbar({ isOpenMobile, onCloseMobile }: LeftNavbarProps) {
             {/* Settings / Sync Config */}
             <button
               type="button"
-              onClick={() => setIsSyncSettingsOpen(true)}
+              onClick={() => {
+                setTodayDay(storageService.getDay(getTodayDateKey()));
+                setIsSyncSettingsOpen(true);
+              }}
               className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-heading font-bold transition-all duration-150 text-[#F7E8D2]/80 hover:bg-white/8 hover:text-white cursor-pointer"
             >
               <Settings2 className="w-[18px] h-[18px] shrink-0 text-[#E2A425]/85" />

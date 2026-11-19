@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FormDialog } from '@/components/shared/form-dialog';
 import { formatArabicDate, formatTime } from '@/lib/date';
+import { scheduleLiveSheetSync } from '@/services/live-sheet-sync';
 import { storageService } from '@/services/storage.service';
 import { syncService } from '@/services/sync.service';
 import type { DayRecord } from '@/types/order';
@@ -32,6 +33,15 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
   );
   const [showSettings, setShowSettings] = useState(!initialConfig.webhookUrl);
 
+  useEffect(() => {
+    if (!open) return;
+    const latest = storageService.getSyncConfig();
+    setWebhookUrl(latest.webhookUrl);
+    setSecretToken(latest.secretToken);
+    setAutoTriggerExport(latest.autoTriggerExport);
+    setShowSettings(!latest.webhookUrl);
+  }, [open]);
+
   const [loadingAction, setLoadingAction] = useState<'sheet' | 'export' | null>(
     null,
   );
@@ -43,11 +53,14 @@ export function SyncModal({ open, onClose, day, onSynced }: SyncModalProps) {
   const isConfigured = Boolean(webhookUrl.trim());
 
   const handleSaveSettings = () => {
-    storageService.saveSyncConfig({
+    const saved = storageService.saveSyncConfig({
       webhookUrl,
       secretToken,
       autoTriggerExport,
     });
+    if (saved.webhookUrl && day.orders.length > 0) {
+      scheduleLiveSheetSync(day.date);
+    }
     setFeedback({
       type: 'success',
       message: 'تم حفظ إعدادات الربط مع Google Sheet بنجاح',
