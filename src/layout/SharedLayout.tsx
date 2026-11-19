@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, CheckCircle2, Menu, X } from 'lucide-react';
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { useDailyAutoSync } from '@/hooks/use-daily-auto-sync';
 import { LeftNavbar } from './LeftNavbar';
 
@@ -22,19 +22,25 @@ export function SharedLayout() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <img
-              src={`${import.meta.env.BASE_URL}logo-gold.png`}
-              alt="HyperTeam"
-              className="w-9 h-9 object-contain"
-            />
-            <div>
-              <h1 className="font-heading text-base font-extrabold text-white leading-tight">
-                الطلبات اليومية
-              </h1>
-              <p className="text-[11px] text-[#E2A425] font-semibold">
-                إدارة طلبات المكتب
-              </p>
-            </div>
+            <Link
+              to="/orders"
+              className="flex items-center gap-3 group cursor-pointer"
+              title="الرئيسية — طلبات اليوم"
+            >
+              <img
+                src={`${import.meta.env.BASE_URL}logo-gold.png`}
+                alt="HyperTeam"
+                className="w-9 h-9 object-contain group-hover:scale-105 transition-transform"
+              />
+              <div>
+                <h1 className="font-heading text-base font-extrabold text-white leading-tight group-hover:text-[#E2A425] transition-colors">
+                  الطلبات اليومية
+                </h1>
+                <p className="text-[11px] text-[#E2A425] font-semibold">
+                  إدارة طلبات المكتب
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </header>

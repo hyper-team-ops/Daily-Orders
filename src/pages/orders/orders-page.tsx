@@ -246,17 +246,8 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
         />
       </section>
 
-      {/* Unified Search & Service Filters */}
-      <SearchFilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedService={selectedService}
-        onServiceChange={setSelectedService}
-        searchInputRef={searchInputRef}
-      />
-
-      {/* Orders Tabs Section: الطلبات المفتوحة vs الطلبات المُسلّمة */}
-      <section className="space-y-4">
+      {/* Orders Tabs Switcher: الطلبات المفتوحة vs الطلبات المُسلّمة */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div
           role="tablist"
           aria-label="تصنيف الطلبات"
@@ -318,7 +309,19 @@ export function DayOrdersBoard({ dateKey }: DayOrdersBoardProps) {
             </span>
           </button>
         </div>
+      </div>
 
+      {/* Unified Search & Service Filters */}
+      <SearchFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedService={selectedService}
+        onServiceChange={setSelectedService}
+        searchInputRef={searchInputRef}
+      />
+
+      {/* Orders Grid Section */}
+      <section className="space-y-4">
         {activeTab === 'open' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {/* بطاقة إضافة طلب جديد — ثابتة دائماً على اليمين في أول خانة */}

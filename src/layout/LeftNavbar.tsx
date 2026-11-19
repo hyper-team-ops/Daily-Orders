@@ -9,7 +9,7 @@ import {
   Settings2,
   X,
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { SidebarWaveDecoration } from '@/components/shared/SidebarWaveDecoration';
 import { SyncModal } from '@/components/sync/sync-modal';
 import { formatTime } from '@/lib/date';
@@ -93,21 +93,26 @@ export function LeftNavbar({ isOpenMobile, onCloseMobile }: LeftNavbarProps) {
 
       {/* Brand Block */}
       <div className="relative z-10 px-5 py-5 border-b border-white/10 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+        <Link
+          to="/orders"
+          onClick={onCloseMobile}
+          className="flex items-center gap-3 min-w-0 group hover:opacity-95 transition cursor-pointer"
+          title="الرئيسية — طلبات اليوم"
+        >
           <img
             src={`${import.meta.env.BASE_URL}logo-gold.png`}
             alt="HyperTeam"
-            className="w-10 h-10 object-contain shrink-0 drop-shadow"
+            className="w-10 h-10 object-contain shrink-0 drop-shadow group-hover:scale-105 transition-transform"
           />
           <div className="min-w-0">
-            <h1 className="font-heading text-base font-extrabold text-white leading-tight truncate">
+            <h1 className="font-heading text-base font-extrabold text-white leading-tight truncate group-hover:text-[#E2A425] transition-colors">
               الطلبات اليومية
             </h1>
             <p className="text-[11px] text-[#E2A425] font-semibold mt-0.5 truncate">
               إدارة طلبات المكتب
             </p>
           </div>
-        </div>
+        </Link>
 
         <button
           type="button"
